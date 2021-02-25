@@ -3,14 +3,14 @@
 
 /* FSM inputs (used for guards) */
 int button;
-int deadline;
+int deadline = 1; // not exactly an input
 
 /* FSM outputs */
 int light;
 
 
 /* Process that indicates FSM behavior */
-active proctype fsm() {
+active proctype fsm() atomic {
     int state = 0;
 
     printf("0\n");
@@ -22,7 +22,7 @@ active proctype fsm() {
     :: (state == 1) ->
         if
         :: (button) -> button = 0;
-        :: (deadline && !button) -> state = 0; deadline = 0; printf("Transition from state 0 to state 1\n");
+        :: (deadline && !button) -> state = 0; light = 0; printf("Transition from state 0 to state 1\n");
         fi
     od
 }
@@ -30,5 +30,10 @@ active proctype fsm() {
 /* Process that changes inputs arbitrarily  */
 
 active proctype environment(){
-    
+    do
+    ::  if
+        :: button = 1;
+        :: skip;
+        fi
+    od
 }
