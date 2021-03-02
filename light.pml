@@ -1,9 +1,18 @@
 /*  Modelo para verificacion formal, incluye especificacion LTL.
     ISEL 2021 */
 
+ltl enciende {
+	[] (button -> <> light)
+}
+
+ltl apaga {
+	[] ((deadline && !button) -> <> !light)
+}
+
+
 /* FSM inputs (used for guards) */
 int button;
-int deadline = 1; // not exactly an input
+int deadline;
 
 /* FSM outputs */
 int light;
@@ -11,31 +20,36 @@ int light;
 
 /* Process that indicates FSM behavior */
 active proctype fsm() {
-    int state = 0;
+  int state = 0;
 
-    printf("0\n");
-    do
+  printf("Estado inicial: 0\n");
+  printf ("estado = %d, button = %d, deadline = %d, light = %d\n", 
+	    state, button, deadline, light)
+  do
+  ::if
     :: (state == 0)  -> atomic {
         if
-        :: (button) -> light = 1; state = 1; button = 0; printf("Transition from state 0 to state 1\n");
+        :: (button) -> light = 1; state = 1; button = 0; printf("(button) Transition from state 0 to state 1\n");
         fi
     }
     :: (state == 1) -> atomic {
         if
-        :: (button) -> button = 0; printf("Transition from state 1 to state 1\n");
-        :: (deadline && !button) -> state = 0; light = 0; printf("Transition from state 1 to state 0\n");
+        :: (button) -> button = 0; printf("(button) Transition from state 1 to state 1\n");
+        :: (deadline && !button) -> state = 0; light = 0; printf("(deadline) Transition from state 1 to state 0\n");
         fi
     }
-    od
+    fi;
+    printf ("estado = %d, button = %d, deadline = %d, light = %d\n", 
+	    state, button, deadline, light)
+  od
 }
 
-/* Process that changes inputs arbitrarily  */
 
-active proctype environment(){
-    do
-    ::  if
-        :: button = 1;
-        :: skip;
-        fi
-    od
+active proctype entorno () {
+	do
+	:: !button -> skip
+	:: button = 1
+	:: deadline = 1
+	od
 }
+
