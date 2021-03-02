@@ -1,10 +1,20 @@
-/* Modelo para verificacion formal. LTL
+/* ISEL 2021 - light
 *
-* Javier Lopez Iniesta Diaz del Campo
+* Modelo para verificacion formal. LTL
+*
+* @author: Javier Lopez Iniesta Diaz del Campo
 * 
-* ISEL 2021
-*
 */
+
+/* property of turning on the light */
+ltl turn_on {
+    [] (button -> <> light)
+}
+
+/* property of turning off the light */
+ltl turn_off {
+    [] ((deadline && !button) -> !light)
+}
 
 /* inputs */
 int deadline;
@@ -18,27 +28,37 @@ mtype = {LIGHT_ON, LIGHT_OFF};
 byte state;
 
 active proctype light_fsm() {
+
     state = LIGHT_OFF;
+
+    printf("Initial state: LIGHT_OFF \n");
+    printf("state: %d, button: %d, deadline: %d, light: %d\n", state, button, deadline, light);
+
     do
-    :: (state == LIGHT_OFF) -> atomic {
-        if
-        :: (button) -> light = 1; state = LIGHT_ON; button = 0; printf(''Transicion de LIGHT_OFF a LIGHT_ON \n")
+    ::  if
+        :: (state == LIGHT_OFF) -> atomic {
+            if
+            :: (button) -> light = 1; state = LIGHT_ON; button = 0; printf("(button) Transition from state LIGHT_OFF to state LIGHT_ON \n");
+            fi;
+        }
+        :: (state == LIGHT_ON) -> atomic {
+            if
+            :: (button) -> state = LIGHT_ON; button = 0; printf("(button) Transition from state LIGHT_ON to state LED_ON \n");
+            :: (deadline && !button) -> state = LIGHT_OFF; light = 0; printf("(deadline) Transition from state LIGHT_ON to state LIGHT_OFF \n");
+            fi
+        }
         fi;
-    }
-    :: (state == LIGHT_ON) -> atomic {
-        if
-        :: (button) -> state = LIGHT_ON; button = 0; printf(''Transicion de LIGHT_ON a LED_ON \n")
-        :: (timeout && !button) -> state = LIGHT_OFF; light = 0; printf(''Transicion de LIGHT_ON a LIGHT_OFF \n")
-        fi;
-    }
+
+        printf("state: %d, button: %d, deadline: %d, light: %d\n", state, button, deadline, light);
+        
     od
 }
 
+/* environment*/
 active proctype environment() {
     do
-        if
-        :: button = 1;
-        :: (!button) -> skip;
-        fi
+    :: !button -> skip
+    :: button = 1
+    :: deadline = 1
     od;
 }
