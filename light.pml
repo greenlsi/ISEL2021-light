@@ -6,7 +6,7 @@ ltl enciende {
 }
 
 ltl apaga {
-	[] ((deadline && !button) -> <> !light)
+	[] ((deadline && (!button W !light)) -> <> !light)
 }
 
 
@@ -29,13 +29,16 @@ active proctype fsm() {
   ::if
     :: (state == 0)  -> atomic {
         if
-        :: (button) -> light = 1; state = 1; button = 0; printf("(button) Transition from state 0 to state 1\n");
+        :: (button) ->  light = 1; state = 1; button = 0; 
+			printf("(button) Transition from state 0 to state 1\n");
         fi
     }
     :: (state == 1) -> atomic {
         if
-        :: (button) -> button = 0; printf("(button) Transition from state 1 to state 1\n");
-        :: (deadline && !button) -> state = 0; light = 0; printf("(deadline) Transition from state 1 to state 0\n");
+        :: (button) ->  button = 0; 
+			printf("(button) Transition from state 1 to state 1\n");
+        :: (deadline && !button) -> state = 0; light = 0; deadline = 0;
+			printf("(deadline) Transition from state 1 to state 0\n");
         fi
     }
     fi;
@@ -47,7 +50,7 @@ active proctype fsm() {
 
 active proctype entorno () {
 	do
-	:: !button -> skip
+	:: skip -> skip
 	:: button = 1
 	:: deadline = 1
 	od
