@@ -13,7 +13,7 @@ ltl turn_on {
 
 /* property of turning off the light */
 ltl turn_off {
-    [] ((deadline && !button) -> !light)
+    [] ((deadline && (!button W !light)) -> <> !light) // Si deadline y no se pulsa el boton hasta que se apaga la luz (si es que se apaga) entonces eventualmente se apaga
 }
 
 /* inputs */
@@ -38,13 +38,16 @@ active proctype light_fsm() {
     ::  if
         :: (state == LIGHT_OFF) -> atomic {
             if
-            :: (button) -> light = 1; state = LIGHT_ON; button = 0; printf("(button) Transition from state LIGHT_OFF to state LIGHT_ON \n");
+            :: (button) -> light = 1; state = LIGHT_ON; button = 0; 
+                           printf("(button) Transition from state LIGHT_OFF to state LIGHT_ON \n");
             fi;
         }
         :: (state == LIGHT_ON) -> atomic {
             if
-            :: (button) -> state = LIGHT_ON; button = 0; printf("(button) Transition from state LIGHT_ON to state LED_ON \n");
-            :: (deadline && !button) -> state = LIGHT_OFF; light = 0; printf("(deadline) Transition from state LIGHT_ON to state LIGHT_OFF \n");
+            :: (button) -> state = LIGHT_ON; button = 0;
+                           printf("(button) Transition from state LIGHT_ON to state LED_ON \n");
+            :: (deadline && !button) -> state = LIGHT_OFF; light = 0; deadline = 0;
+                           printf("(deadline) Transition from state LIGHT_ON to state LIGHT_OFF \n");
             fi
         }
         fi;
@@ -57,7 +60,7 @@ active proctype light_fsm() {
 /* environment*/
 active proctype environment() {
     do
-    :: !button -> skip
+    :: skip -> skip
     :: button = 1
     :: deadline = 1
     od;
